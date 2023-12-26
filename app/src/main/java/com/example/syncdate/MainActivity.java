@@ -14,6 +14,7 @@ import android.os.ParcelUuid;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import java.io.IOException;
@@ -29,6 +30,7 @@ public class MainActivity extends AppCompatActivity {
     private OutputStream outputStream;
     private InputStream inStream;
 
+    private TextView dateTV;
     Button sync_btn;
 
     @Override
@@ -36,9 +38,11 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         sync_btn = findViewById(R.id.sync_button);
+        dateTV = findViewById(R.id.textView);
         int PERMISSION_ALL = 1;
         String[] PERMISSIONS = {
                 android.Manifest.permission.BLUETOOTH,
+                android.Manifest.permission.BLUETOOTH_ADMIN,
                 android.Manifest.permission.BLUETOOTH_CONNECT,
         };
         if (!hasPermissions(this, PERMISSIONS)) {
@@ -58,13 +62,15 @@ public class MainActivity extends AppCompatActivity {
                         if(bondedDevices.size() > 0) {
                             Object[] devices = (Object []) bondedDevices.toArray();
                             BluetoothDevice device = (BluetoothDevice) devices[0];
+                            System.out.println("AAAAAAAAAAAAAA " + device.getName());
                             ParcelUuid[] uuids = device.getUuids();
                             try {
                                 BluetoothSocket socket = device.createRfcommSocketToServiceRecord(uuids[0].getUuid());
                                 try {
                                     socket.connect();
                                 }catch (IOException e){
-                                    Toast.makeText(getApplicationContext(), "Socket Connection Failed.", Toast.LENGTH_SHORT).show();
+                                    throw new RuntimeException(e);
+//                                    Toast.makeText(getApplicationContext(), "Socket Connection Failed.", Toast.LENGTH_SHORT).show();
                                 }
                                 try {
                                     outputStream = socket.getOutputStream();
@@ -75,6 +81,7 @@ public class MainActivity extends AppCompatActivity {
                                     Date c = Calendar.getInstance().getTime();
                                     SimpleDateFormat df = new SimpleDateFormat("dd-MMM-yyyy", Locale.getDefault());
                                     outputStream.write(df.format(c).getBytes());
+                                    dateTV.setText(df.format(c));
                                     Toast.makeText(getApplicationContext(), "Successfully Written Date.", Toast.LENGTH_SHORT).show();
                                 }catch (IOException e){
                                     Toast.makeText(getApplicationContext(), "Socket Write Failed.", Toast.LENGTH_SHORT).show();
@@ -102,26 +109,6 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-    }
-
-
-    public void write(String s) throws IOException {
-        outputStream.write(s.getBytes());
-    }
-
-    public void run() {
-        final int BUFFER_SIZE = 1024;
-        byte[] buffer = new byte[BUFFER_SIZE];
-        int bytes = 0;
-        int b = BUFFER_SIZE;
-
-        while (true) {
-            try {
-                bytes = inStream.read(buffer, bytes, BUFFER_SIZE - bytes);
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        }
     }
 
     public static boolean hasPermissions(Context context, String... permissions) {
