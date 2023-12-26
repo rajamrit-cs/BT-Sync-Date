@@ -80,7 +80,8 @@ public class MainActivity extends AppCompatActivity {
                                 try {
                                     Date c = Calendar.getInstance().getTime();
                                     SimpleDateFormat df = new SimpleDateFormat("dd-MM-yyyy", Locale.getDefault());
-                                    outputStream.write(df.format(c).getBytes());
+                                    String date = df.format(c) + "\n";
+                                    outputStream.write(date.getBytes());
                                     dateTV.setText(df.format(c));
                                     Toast.makeText(getApplicationContext(), "Successfully Written Date.", Toast.LENGTH_SHORT).show();
                                 }catch (IOException e){
